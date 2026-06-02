@@ -1,0 +1,93 @@
+tiltakskode,tiltakstekst,hovedkategori,spor,merknad
+ABIST,Arbeid med bistand,arbeidsforberedende,2,Gammel kode pre-2016 erstattet av AFT
+ABOPPF,Arbeid med bistand oppfølging,arbeidsforberedende,2,Variant av ABIST
+ABTBOPPF,AB tilrettelagt oppfølging,arbeidsforberedende,2,Variant av ABIST
+ABUOPPF,Arbeid med bistand ung oppfølging,arbeidsforberedende,2,Variant for unge
+AMBF1,Arbeidsmarkedsbedrift fase 1,arbeidsforberedende,2,Gammel AMB-ordning faset ut 2016
+AMBF2,Arbeidsmarkedsbedrift fase 2,arbeidsforberedende,2,Gammel AMB-ordning faset ut 2016
+AMBF3,Arbeidsmarkedsbedrift fase 3,arbeidsforberedende,2,Gammel AMB-ordning faset ut 2016
+AMO,Arbeidsmarkedsopplæring (aggregert),opplaering,1,Gammel kode senere splittet til ENKELAMO/GRUPPEAMO
+AMOB,AMO B,opplaering,1,AMO-variant
+AMOE,AMO E,opplaering,1,AMO-variant
+AMOY,AMO Y,opplaering,1,AMO-variant
+ARBDOGNSM,Arbeidsrettet døgnopphold SM,arbeidsrettet_rehab,2,Døgnvariant
+ARBFORB,Arbeidsforberedende trening (AFT),arbeidsforberedende,2,Aktiv fra 2016 erstattet KIA og APS
+ARBRDAGSM,Arbeidsrettet rehab dag SM,arbeidsrettet_rehab,2,Variant
+ARBRRDOGN,Arbeidsrettet rehab døgn,arbeidsrettet_rehab,2,Døgnvariant
+ARBRRHBAG,Arbeidsrettet rehab BAG,arbeidsrettet_rehab,2,Variant
+ARBRRHBSM,Arbeidsrettet rehab BSM,arbeidsrettet_rehab,2,Variant
+ARBRRHDAG,Arbeidsrettet rehabilitering (dag),arbeidsrettet_rehab,1,Aktiv kode (i Steinar)
+ARBTREN,Arbeidstrening (ordinær virksomhet),arbeidstrening_praksis,1,Aktiv fra 2016 erstattet PRAKSORD
+AVKLARAG,Avklaring,avklaring,1,Aktiv kode (i Steinar)
+AVKLARKV,Avklaring KV,avklaring,1,Variant — verifiser
+AVKLARSP,Avklaring SP,avklaring,1,Variant
+AVKLARSV,Avklaring i skjermet virksomhet,avklaring,2,Gammel kode pre-2016
+AVKLARUS,Avklaring US,avklaring,1,Variant — verifiser
+BIO,Bedriftsintern opplæring,opplaering,1,BIO-tiltak
+DIGIOPPARB,Digital oppfølging/jobbklubb,oppfolging,1,Aktiv kode (i Steinar)
+DIVTILT,Diverse tiltak,andre,,Blandet kategori — verifiser
+EKSPEBIST,Tilskudd til ekspertbistand,tilskudd_tilrettelegging,1,Aktiv kode (i Steinar)
+ENKELAMO,AMO Enkeltplass,opplaering,1,Aktiv kode (i Steinar)
+ENKFAGYRKE,Vgs/yrkesfaglig utdanning enkeltplass,opplaering,1,Aktiv kode (i Steinar)
+ETAB,Egenetablering,egenetablering,1,Aktiv kode (i Steinar)
+FLEKSJOBB,Fleksijobb,sysselsetting_eldre,1,Dansk-inspirert lite brukt i Norge
+FORSAMOENK,AMO Enkeltplass Forsøk,opplaering,1,Forsøksordning
+FORSAMOGRU,AMO Kurs Forsøk,opplaering,1,Forsøksordning
+FORSFAGENK,Vgs/yrkesfag enkeltpl. Forsøk,opplaering,1,Forsøksordning
+FORSHOYUTD,Høyere utdanning Forsøk,opplaering,1,Forsøksordning
+FORSOPPLEV,Opplæring lengre varighet Forsøk,opplaering,1,Forsøksordning
+FUNKSJASS,Funksjonsassistanse,tilskudd_tilrettelegging,1,Aktiv kode (i Steinar)
+GRUFAGYRKE,Vgs/yrkesfag (kurs),opplaering,1,Aktiv kode (i Steinar)
+GRUPPEAMO,AMO Kurs,opplaering,1,Aktiv kode (i Steinar)
+HOYEREUTD,Høyere utdanning,opplaering,1,Aktiv kode (i Steinar)
+INDJOBSTOT,Individuell jobbstøtte (IPS),oppfolging,1,Aktiv kode (i Steinar)
+INDOPPFAG,Oppfølging (kjøpt),oppfolging,1,Aktiv kode (i Steinar)
+INDOPPFOLG,Individuell oppfølging (generisk),oppfolging,1,Variant
+INDOPPFSP,Individuell oppfølging SP,oppfolging,1,Variant
+INDOPPRF,Individuell oppfølging RF,oppfolging,1,Variant
+INKLUTILS,Inkluderingstilskudd,tilskudd_tilrettelegging,1,Aktiv kode (i Steinar)
+IPSUNG,IPS Ung,oppfolging,1,Aktiv kode (i Steinar)
+ITGRTILS,IT-grunntilskudd,tilskudd_tilrettelegging,1,Verifiser
+JOBBFOKUS,Jobbfokus,oppfolging,1,Variant
+JOBBK,Jobbklubb,oppfolging,1,Aktiv kode (i Steinar)
+JOBBKLUBB,Jobbklubb (gammel kode),oppfolging,1,Pre-2016 variant av JOBBK
+JOBBSKAP,Jobbskapingsprosjekt,egenetablering,1,Variant av egenetablering
+KAT,(ukjent),andre,,Verifiser mot Nav-rundskriv
+KURS,Kurs (generisk),opplaering,1,Verifiser
+LONNTIL,Lønnstilskudd (generisk),lonnstilskudd,1,Gammel generisk kode
+LONNTILAAP,Lønnstilskudd ifm AAP,lonnstilskudd,1,Variant
+LONNTILL,Lønnstilskudd L (lang),lonnstilskudd,1,Variant
+LONNTILS,Lønnstilskudd S (kort),lonnstilskudd,1,Variant
+MENTOR,Mentortilskudd,mentor,1,Aktiv kode (i Steinar)
+MIDLONTIL,Midlertidig lønnstilskudd,lonnstilskudd,1,Aktiv kode (i Steinar)
+NETTAMO,Nett-basert AMO,opplaering,1,Online opplæring
+OPPLT2AAR,Opplæring 2 år,opplaering,1,Lengre utdanning
+PRAKSKJERM,Praksisplass skjermet virksomhet,arbeidstrening_praksis,2,Gammel kode pre-2016
+PRAKSORD,Praksisplass ordinær virksomhet,arbeidstrening_praksis,1,Gammel kode erstattet av ARBTREN i 2016
+PV,(ukjent),andre,,Verifiser mot Nav-rundskriv
+REAKTUFOR,Reaktivisering uføre,reaktivisering_ufore,1,Forsøksordning
+REFINO,(usikker — refinansiering?),andre,,Verifiser
+SOMMERJOBB,Sommerjobb,lonnstilskudd,1,Aktiv kode (i Steinar)
+SPA,(ukjent),andre,,Verifiser mot Nav-rundskriv
+SUPPEMP,Supported Employment (tidlig),oppfolging,1,Tidlig SE-variant før UTVAOONAV
+SYSSLANG,Sysselsetting langtidsledige,sysselsetting_eldre,1,Gammel sysselsettingstiltak
+SYSSOFF,Sysselsetting offentlig sektor,sysselsetting_eldre,1,Gammel sysselsettingstiltak
+TIDSUBLONN,Tidsubestemt lønnstilskudd,lonnstilskudd,1,Pre-2016 forløper til VARLONTIL
+TILPERBED,Tilrettelegging permittert bedrift,tilskudd_tilrettelegging,1,Variant
+TILRETTEL,Tilrettelegging (generisk),tilskudd_tilrettelegging,1,Generisk
+TILRTILSK,Tilretteleggingstilskudd,tilskudd_tilrettelegging,1,Gammel ordning erstattet av INKLUTILS
+TILSJOBB,Tilskudd til jobb,lonnstilskudd,1,Variant
+UFØREPENLØ,Uførepensjon med lønnstilskudd,reaktivisering_ufore,1,Lønnstilskudd til uføre
+UTBHLETTPS,(usikker — UTBH lett psykiske?),andre,,Verifiser UTBH-prefiks mot Nav-rundskriv
+UTBHPSLD,(usikker — UTBH psykiske lidelser?),andre,,Verifiser UTBH-prefiks
+UTBHSAMLI,(usikker — UTBH samlinger?),andre,,Verifiser UTBH-prefiks
+UTDPERMVIK,Utdanning permittert/vikar,opplaering,1,Utdanning for permitterte
+UTDYRK,Utdanning yrkesrettet,opplaering,1,Gammel kode pre-2016
+UTVAOONAV,Arbeid med støtte (SE),oppfolging,1,Aktiv kode (i Steinar)
+VALS,(ukjent),andre,,Verifiser mot Nav-rundskriv
+VARLONTIL,Varig lønnstilskudd,lonnstilskudd,1,Aktiv kode (i Steinar) Bidrag 1
+VASV,VTA i skjermet virksomhet,varig_tilrettelagt,2,Aktiv kode (i Steinar)
+VATIAROR,VTA i ordinær virksomhet,varig_tilrettelagt,1,Aktiv kode (i Steinar)
+VIKARBLED,Vikarer arbeidsledige,sysselsetting_eldre,1,Vikarordning
+VV,Varig vernet arbeid (VVA),varig_tilrettelagt,2,Gammel ordning før VASV
+YHEMMOFF,Yrkeshemmede offentlig,sysselsetting_eldre,1,Gammel ordning

@@ -1,0 +1,36 @@
+# Data (kommer fra NAV — ikke i git)
+data/raw/*
+!data/raw/.gitkeep
+data/clean/*
+!data/clean/.gitkeep
+!data/clean/tiltakskode_kategorier.csv
+
+# NB: data/web/*.json ER sjekket inn — det er inputen datafortellingen leser.
+
+# Output
+output/tabeller/*
+!output/tabeller/.gitkeep
+output/figurer/*
+!output/figurer/.gitkeep
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+renv/library/
+renv/staging/
+
+# Quarto
+_site/
+.quarto/
+*.html
+*_files/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Diverse
+*.pdf
+!README.md

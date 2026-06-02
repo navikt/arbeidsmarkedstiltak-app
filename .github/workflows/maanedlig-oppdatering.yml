@@ -1,0 +1,82 @@
+name: Månedlig oppdatering
+
+# Schedulering: kjører automatisk én gang i måneden og henter ny NAV
+# TILT-statistikk. Cron-tid er i UTC. Dag 20 er valgt som trygg buffer —
+# NAV publiserer normalt tidligere i måneden, men eksakt dato varierer.
+# Kan også startes manuelt fra Actions-fanen (workflow_dispatch).
+on:
+  schedule:
+    - cron: "0 6 20 * *"   # dag 20 hver måned, 06:00 UTC
+  workflow_dispatch:        # manuell trigger
+
+# Workflowen committer oppdatert data tilbake til repoet.
+permissions:
+  contents: write
+
+jobs:
+  oppdater-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sjekk ut repo
+        uses: actions/checkout@v4
+
+      - name: Sett opp R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true   # binærpakker for Ubuntu — rask installering
+
+      - name: Installer R-pakker
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::tidyverse
+            any::rvest
+            any::here
+            any::fs
+            any::jsonlite
+            any::lubridate
+            any::readxl
+
+      - name: Kjør pipeline (last ned -> parse -> aggreger -> eksporter JSON)
+        run: |
+          Rscript code/R/2026-05-24_00_last_ned.R
+          Rscript code/R/2026-05-24_01_parse_nav.R
+          Rscript code/R/2026-05-24_02_aggreger.R
+          Rscript code/R/2026-05-24_03_eksporter_json.R
+
+      - name: Commit oppdatert data hvis noe endret seg
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Bare data/web/ skal sjekkes inn (raw/clean er gitignored).
+          # metadata.json endrer 'generert'-tidsstempel ved hver kjøring; vi
+          # committer bare hvis det faktisk kom ny statistikk i datafilene.
+          git add data/web/
+          if git diff --cached --quiet -- ':!data/web/metadata.json'; then
+            echo "Ingen endring i datafilene — ingen ny NAV-statistikk. Avbryter commit."
+            git reset
+          else
+            git add data/web/
+            git commit -m "Månedlig oppdatering: ny NAV TILT-data ($(date +%Y-%m))"
+            git push
+          fi
+
+      # ----------------------------------------------------------------------
+      # TODO — publisering etter NAVs datafortelling-oppskrift.
+      # Når oppskriften er på plass, legg til et steg som bygger og publiserer,
+      # f.eks:
+      #
+      #   - name: Sett opp Quarto
+      #     uses: quarto-dev/quarto-actions/setup@v2
+      #
+      #   - name: Render og publiser
+      #     env:
+      #       NADA_TOKEN: ${{ secrets.NADA_TOKEN }}   # legg token i repo-secrets
+      #     run: |
+      #       quarto render arbeidsmarkedstiltak.qmd
+      #       # ... publiseringskall iht. NAVs interne oppskrift
+      #
+      # Husk å legge nødvendige secrets under
+      # Settings -> Secrets and variables -> Actions i navikt-repoet.
+      # ----------------------------------------------------------------------

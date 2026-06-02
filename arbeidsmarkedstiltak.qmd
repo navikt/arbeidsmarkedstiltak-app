@@ -1,0 +1,862 @@
+---
+title: "Arbeidsmarkedstiltak i NAV"
+subtitle: "Tidsserier over deltakere på NAVs tiltak"
+format:
+  html:
+    page-layout: full
+    toc: false
+    grid:
+      body-width: 1100px
+    include-in-header:
+      text: |
+        <style>
+          /* Venstrestilt innhold — matcher påstandstittel og resten av siden */
+          .kpi-overskrift {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 1.5rem 0 0.5rem;
+            max-width: 1032px;
+          }
+          .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin: 0 0 2rem;
+            max-width: 1032px;
+          }
+          @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+          }
+          .kpi-box {
+            border-left: 3px solid #1a6b4a;
+            padding: 0.6rem 1rem;
+            background: #fdfdfd;
+          }
+          .kpi-label {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            margin-bottom: 0.25rem;
+          }
+          .kpi-value {
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #111;
+            line-height: 1.1;
+          }
+          .kpi-delta {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            margin-top: 0.25rem;
+          }
+          .kpi-delta.opp  { color: #1a6b4a; }
+          .kpi-delta.ned  { color: #8b2a2a; }
+          .pastandstittel {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111;
+            line-height: 1.35;
+            margin: 0.5rem 0 1rem;
+          }
+          .zoom-tittel {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 1.5rem 0 0.25rem;
+          }
+          .tab1-figurer {
+            display: grid;
+            grid-template-columns: auto auto;
+            justify-content: start;
+            gap: 2rem;
+            margin: 1rem 0 0;
+            max-width: 1032px;
+            align-items: start;
+          }
+          .tab1-figurer .figur-tittel {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.25rem;
+          }
+          .tab1-figurer > div { min-width: 0; }
+          /* max-width holder SVG-en på sin nominale størrelse (500×300) på
+             desktop, men skalerer ned ved smalere viewport. */
+          .tab1-figurer svg { max-width: 100%; height: auto; display: block; }
+          @media (max-width: 900px) {
+            .tab1-figurer { grid-template-columns: 1fr; }
+          }
+          .kildefooter {
+            font-size: 0.8rem;
+            color: #5d6d7e;
+            margin-top: 1.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e2e5e7;
+          }
+          .hg-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem 1.5rem;
+            margin-top: 1rem;
+          }
+          @media (max-width: 768px) {
+            .hg-grid { grid-template-columns: 1fr; }
+          }
+          .hg-panel {
+            border-top: 1px solid #e2e5e7;
+            padding-top: 0.5rem;
+          }
+          .hg-tittel {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+          }
+          .hg-tittel .hg-verdi {
+            color: #1a6b4a;
+            font-variant-numeric: tabular-nums;
+          }
+          .hg-tittel .hg-verdi.utfaset {
+            color: #9ca3a3;
+            font-weight: 400;
+          }
+          .tt-velgere {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+            margin: 1rem 0 0.5rem;
+          }
+          .tt-velgere > * { flex: 0 0 auto; }
+          .tt-csv {
+            margin-left: auto;
+            font-size: 0.85rem;
+          }
+          .tt-csv a {
+            color: #1a6b4a;
+            text-decoration: none;
+            border-bottom: 1px solid #1a6b4a;
+          }
+          .tt-meta {
+            font-size: 0.85rem;
+            color: #5d6d7e;
+            margin: 0.25rem 0 0.75rem;
+          }
+        </style>
+---
+
+```{ojs}
+//| label: last-data
+//| echo: false
+oversikt = FileAttachment("data/web/oversikt.json").json()
+  .then(rows => rows.map(d => ({...d, periode: new Date(d.periode)})))
+hovedgrupper = FileAttachment("data/web/hovedgrupper.json").json()
+  .then(rows => rows.map(d => ({...d, periode: new Date(d.periode)})))
+metadata = FileAttachment("data/web/metadata.json").json()
+```
+
+```{ojs}
+//| label: avledede-tall
+//| echo: false
+// Sorterte unike perioder — robust mot tz-forskyvninger (JSON-datoer parses
+// som UTC midnight, mens d3.timeMonth.offset bruker lokal tid)
+unike_perioder = [...new Set(oversikt.map(d => d.periode.getTime()))]
+  .sort((a, b) => a - b)
+  .map(t => new Date(t))
+
+siste_periode   = unike_perioder[unike_perioder.length - 1]
+forrige_periode = unike_perioder[unike_perioder.length - 2]
+// Året før — for siste-12-mnd-endring som hovedindikator
+i_for_aar       = Math.max(0, unike_perioder.length - 13)
+for_aar_periode = unike_perioder[i_for_aar]
+start_periode   = unike_perioder[0]
+
+sum_per_maalgruppe = periode => d3.rollup(
+  oversikt.filter(d => d.periode.getTime() === periode.getTime()),
+  v => v[0].antall,
+  d => d.maalgruppe
+)
+
+siste_per_maalgruppe   = sum_per_maalgruppe(siste_periode)
+forrige_per_maalgruppe = sum_per_maalgruppe(forrige_periode)
+for_aar_per_maalgruppe = sum_per_maalgruppe(for_aar_periode)
+start_per_maalgruppe   = sum_per_maalgruppe(start_periode)
+
+totalt_naa     = d3.sum([...siste_per_maalgruppe.values()])
+totalt_for_aar = d3.sum([...for_aar_per_maalgruppe.values()])
+delta_aar_pct  = (totalt_naa - totalt_for_aar) / totalt_for_aar * 100
+```
+
+```{ojs}
+//| label: hjelpere
+//| echo: false
+fmt_n   = d3.format(",.0f")
+fmt_pct = d3.format("+,.1f")
+fmt_mnd = d => d.toLocaleDateString("no-NO", { year: "numeric", month: "long" })
+fmt_int = n => fmt_n(n).replace(/,/g, " ")
+```
+
+::: {.panel-tabset}
+
+## Oversikt
+
+```{ojs}
+//| label: kpi-bokser
+//| echo: false
+
+html`
+<div class="pastandstittel">
+  Antallet personer på tiltak for nedsatt arbeidsevne har vokst med
+  ${fmt_pct((siste_per_maalgruppe.get("Nedsatt arbeidsevne") / start_per_maalgruppe.get("Nedsatt arbeidsevne") - 1) * 100)} %
+  siden 2019 — arbeidssøker-tiltakene svinger i takt med konjunkturen.
+</div>
+
+<div class="kpi-overskrift">Per ${fmt_mnd(siste_periode)}</div>
+
+<div class="kpi-grid">
+  <div class="kpi-box">
+    <div class="kpi-label">Totalt på tiltak</div>
+    <div class="kpi-value">${fmt_n(totalt_naa).replace(/,/g, " ")}</div>
+    <div class="kpi-delta ${delta_aar_pct >= 0 ? "opp" : "ned"}">
+      ${fmt_pct(delta_aar_pct)} % siste 12 mnd
+    </div>
+  </div>
+
+  <div class="kpi-box">
+    <div class="kpi-label">Arbeidssøkere</div>
+    <div class="kpi-value">${fmt_n(siste_per_maalgruppe.get("Arbeidssøkere")).replace(/,/g, " ")}</div>
+    <div class="kpi-delta ${siste_per_maalgruppe.get("Arbeidssøkere") >= for_aar_per_maalgruppe.get("Arbeidssøkere") ? "opp" : "ned"}">
+      ${fmt_pct((siste_per_maalgruppe.get("Arbeidssøkere") / for_aar_per_maalgruppe.get("Arbeidssøkere") - 1) * 100)} %
+      siste 12 mnd
+    </div>
+  </div>
+
+  <div class="kpi-box">
+    <div class="kpi-label">Nedsatt arbeidsevne</div>
+    <div class="kpi-value">${fmt_n(siste_per_maalgruppe.get("Nedsatt arbeidsevne")).replace(/,/g, " ")}</div>
+    <div class="kpi-delta ${siste_per_maalgruppe.get("Nedsatt arbeidsevne") >= for_aar_per_maalgruppe.get("Nedsatt arbeidsevne") ? "opp" : "ned"}">
+      ${fmt_pct((siste_per_maalgruppe.get("Nedsatt arbeidsevne") / for_aar_per_maalgruppe.get("Nedsatt arbeidsevne") - 1) * 100)} %
+      siste 12 mnd
+    </div>
+  </div>
+</div>
+`
+```
+
+```{ojs}
+//| label: brudd-data
+//| echo: false
+// Felles brudd-håndtering brukt av tab 1 (hovedfigur og zoom), tab 2 og
+// tab 3. Bridge-punkter (ett på hver side) kobler stiplet til heldekkende.
+brudd_periode_min = d3.min(oversikt.filter(d => d.brudd), d => d.periode)
+brudd_periode_max = d3.max(oversikt.filter(d => d.brudd), d => d.periode)
+bridge_start = unike_perioder[unike_perioder.findIndex(p => p.getTime() === brudd_periode_min.getTime()) - 1]
+bridge_slutt = unike_perioder[unike_perioder.findIndex(p => p.getTime() === brudd_periode_max.getTime()) + 1]
+```
+
+```{ojs}
+//| label: tab1-figurer
+//| echo: false
+// Hovedfigur (hele perioden) + zoom (siste 24 mnd) side-by-side.
+// 3fr-2fr-grid på desktop, stack til 1 kolonne under 900px.
+{
+  const oversikt_normal = oversikt.filter(d =>
+    d.maalgruppe !== "Arbeidssøkere" || !d.brudd
+  );
+  const oversikt_brudd = oversikt.filter(d =>
+    d.maalgruppe === "Arbeidssøkere" &&
+    d.periode.getTime() >= bridge_start.getTime() &&
+    d.periode.getTime() <= bridge_slutt.getTime()
+  );
+  const endepunkter = [...d3.group(oversikt, d => d.maalgruppe)]
+    .map(([m, rows]) => rows[rows.length - 1]);
+
+  const cutoff_24 = unike_perioder[Math.max(0, unike_perioder.length - 24)];
+  const data_24 = oversikt.filter(d => d.periode.getTime() >= cutoff_24.getTime());
+  const data_24_normal = data_24.filter(d =>
+    d.maalgruppe !== "Arbeidssøkere" || !d.brudd
+  );
+  const data_24_brudd = data_24.filter(d =>
+    d.maalgruppe === "Arbeidssøkere" &&
+    d.periode.getTime() >= bridge_start.getTime() &&
+    d.periode.getTime() <= bridge_slutt.getTime()
+  );
+  const ende_24 = [...d3.group(data_24, d => d.maalgruppe)]
+    .map(([m, rows]) => rows[rows.length - 1]);
+
+  const farger = {
+    domain: ["Arbeidssøkere", "Nedsatt arbeidsevne"],
+    range:  ["#2c3e50", "#1a6b4a"]
+  };
+  const y_full = {
+    label:      "Antall deltakere",
+    grid:       true,
+    nice:       true,
+    domain:     [0, d3.max(oversikt, d => d.antall) * 1.05],
+    tickFormat: d => d3.format(",.0f")(d).replace(/,/g, " ")
+  };
+
+  const hovedfigur = Plot.plot({
+    width:        500,
+    height:       280,
+    marginLeft:   55,
+    marginRight:  145,
+    marginBottom: 35,
+    x:     { label: null, type: "time" },
+    y:     y_full,
+    color: farger,
+    marks: [
+      Plot.ruleY([0], { stroke: "#9ca3a3" }),
+      Plot.line(oversikt_normal, {
+        x: "periode", y: "antall", stroke: "maalgruppe",
+        strokeWidth: 2, curve: "monotone-x"
+      }),
+      Plot.line(oversikt_brudd, {
+        x: "periode", y: "antall",
+        stroke: "#9ca3a3", strokeWidth: 2, strokeDasharray: "4,4"
+      }),
+      Plot.text(endepunkter, {
+        x: "periode", y: "antall", text: d => d.maalgruppe,
+        textAnchor: "start", dx: 8, fill: "maalgruppe",
+        fontWeight: 600, fontSize: 12
+      }),
+      Plot.tip(oversikt, Plot.pointerX({
+        x: "periode", y: "antall", stroke: "maalgruppe",
+        title: d =>
+          `${d.maalgruppe}\n${fmt_mnd(d.periode)}\n${fmt_int(d.antall)} deltakere` +
+          (d.brudd ? "\n(registeromlegging — ikke sammenlignbart)" : "")
+      }))
+    ]
+  });
+
+  // Samme dimensjoner, marginer OG y-domain som hovedfigur — så plot-arealet
+  // inni blir likt og avstandene mellom linjene er sammenlignbare.
+  const zoomfigur = Plot.plot({
+    width:        500,
+    height:       280,
+    marginLeft:   55,
+    marginRight:  145,
+    marginBottom: 35,
+    x:     { label: null, type: "time", ticks: 4 },
+    y:     { ...y_full, label: null },
+    color: farger,
+    marks: [
+      Plot.ruleY([0], { stroke: "#9ca3a3" }),
+      Plot.line(data_24_normal, {
+        x: "periode", y: "antall", stroke: "maalgruppe",
+        strokeWidth: 2, curve: "monotone-x"
+      }),
+      Plot.line(data_24_brudd, {
+        x: "periode", y: "antall",
+        stroke: "#9ca3a3", strokeWidth: 2, strokeDasharray: "4,4"
+      }),
+      Plot.text(ende_24, {
+        x: "periode", y: "antall", text: d => d.maalgruppe,
+        textAnchor: "start", dx: 8, fill: "maalgruppe",
+        fontWeight: 600, fontSize: 12
+      }),
+      Plot.tip(data_24, Plot.pointerX({
+        x: "periode", y: "antall", stroke: "maalgruppe",
+        title: d =>
+          `${d.maalgruppe}\n${fmt_mnd(d.periode)}\n${fmt_int(d.antall)} deltakere` +
+          (d.brudd ? "\n(registeromlegging — ikke sammenlignbart)" : "")
+      }))
+    ]
+  });
+
+  return htl.html`
+    <div class="tab1-figurer">
+      <div>
+        <div class="figur-tittel">Hele perioden — januar 2019 til i dag</div>
+        ${hovedfigur}
+      </div>
+      <div>
+        <div class="figur-tittel">Siste 24 måneder</div>
+        ${zoomfigur}
+      </div>
+    </div>
+  `;
+}
+```
+
+## Hovedgrupper
+
+```{ojs}
+//| label: hg-velger
+//| echo: false
+viewof hg_maalgruppe = Inputs.radio(
+  ["Arbeidssøkere", "Nedsatt arbeidsevne"],
+  { label: "Målgruppe:", value: "Nedsatt arbeidsevne" }
+)
+```
+
+```{ojs}
+//| label: hg-kpi
+//| echo: false
+{
+  const total_naa     = siste_per_maalgruppe.get(hg_maalgruppe);
+  const total_for_aar = for_aar_per_maalgruppe.get(hg_maalgruppe);
+  const total_forrige = forrige_per_maalgruppe.get(hg_maalgruppe);
+  const delta_aar = (total_naa - total_for_aar) / total_for_aar * 100;
+  const delta_mnd = (total_naa - total_forrige) / total_forrige * 100;
+  return html`
+    <div class="kpi-overskrift">Per ${fmt_mnd(siste_periode)} — ${hg_maalgruppe.toLowerCase()}</div>
+    <div class="kpi-grid">
+      <div class="kpi-box">
+        <div class="kpi-label">Totalt på tiltak</div>
+        <div class="kpi-value">${fmt_int(total_naa)}</div>
+        <div class="kpi-delta">deltakere</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Siste 12 mnd</div>
+        <div class="kpi-value ${delta_aar >= 0 ? "" : ""}">${fmt_pct(delta_aar)} %</div>
+        <div class="kpi-delta ${delta_aar >= 0 ? "opp" : "ned"}">
+          ${fmt_int(total_naa - total_for_aar)} deltakere
+        </div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Siste måned</div>
+        <div class="kpi-value">${fmt_pct(delta_mnd)} %</div>
+        <div class="kpi-delta ${delta_mnd >= 0 ? "opp" : "ned"}">
+          ${fmt_int(total_naa - total_forrige)} deltakere
+        </div>
+      </div>
+    </div>
+  `;
+}
+```
+
+```{ojs}
+//| label: hg-data
+//| echo: false
+hg_filtrert = hovedgrupper.filter(d => d.maalgruppe === hg_maalgruppe)
+
+// Sorter hovedgrupper etter siste verdi, høyest først
+hg_sortert = {
+  const siste = unike_perioder[unike_perioder.length - 1];
+  const sum = d3.rollup(
+    hg_filtrert.filter(d => d.periode.getTime() === siste.getTime()),
+    v => v[0].antall,
+    d => d.hovedgruppe
+  );
+  return [...sum.entries()]
+    .sort((a, b) => d3.descending(a[1], b[1]))
+    .map(([hg]) => hg);
+}
+
+// Siste 12 måneder for grønn fremheving
+hg_siste_12 = {
+  const cutoff = unike_perioder[unike_perioder.length - 12];
+  return hg_filtrert.filter(d => d.periode.getTime() >= cutoff.getTime());
+}
+
+// Brudd-håndtering for arbeidssøker-hovedgrupper (apr–jul 2025). Bruker
+// samme bridge-logikk som Tab 1 / Tab 3 — globalt definert i Tab 1-cella.
+hg_har_brudd = hg_filtrert.some(d => d.brudd)
+```
+
+```{ojs}
+//| label: hg-grid
+//| echo: false
+htl.html`
+<div class="hg-grid">
+  ${hg_sortert.map(hg => {
+    const data        = hg_filtrert.filter(d => d.hovedgruppe === hg);
+    const data_siste  = hg_siste_12.filter(d => d.hovedgruppe === hg);
+    const siste_verdi = data[data.length - 1]?.antall ?? 0;
+
+    // Brudd-segment med bridge-punkter (mars + august 2025 — ett punkt på
+    // hver side av bruddet for å koble stipling til heldekkende segment).
+    const data_brudd = hg_har_brudd
+      ? data.filter(d =>
+          d.periode.getTime() >= bridge_start.getTime() &&
+          d.periode.getTime() <= bridge_slutt.getTime()
+        )
+      : [];
+    const data_normal = hg_har_brudd ? data.filter(d => !d.brudd) : data;
+    const data_siste_normal = hg_har_brudd
+      ? data_siste.filter(d => !d.brudd)
+      : data_siste;
+
+    return htl.html`<div class="hg-panel">
+      <div class="hg-tittel">
+        <span>${hg}</span>
+        <span class="hg-verdi">${fmt_int(siste_verdi)}</span>
+      </div>
+      ${Plot.plot({
+        height:       110,
+        marginLeft:   45,
+        marginRight:  12,
+        marginTop:    8,
+        marginBottom: 22,
+        x: {
+          label:  null,
+          type:   "time",
+          domain: [unike_perioder[0], unike_perioder[unike_perioder.length - 1]],
+          ticks:  4
+        },
+        y: {
+          label:      null,
+          grid:       true,
+          nice:       true,
+          tickFormat: d => d3.format(",.0f")(d).replace(/,/g, " ")
+        },
+        marks: [
+          Plot.ruleY([0], { stroke: "#9ca3a3" }),
+          Plot.line(data_normal, {
+            x:           "periode",
+            y:           "antall",
+            stroke:      "#9ca3a3",
+            strokeWidth: 1.5,
+            curve:       "monotone-x"
+          }),
+          data_brudd.length > 0 ? Plot.line(data_brudd, {
+            x:                "periode",
+            y:                "antall",
+            stroke:           "#9ca3a3",
+            strokeWidth:      1.5,
+            strokeDasharray:  "3,3"
+          }) : null,
+          Plot.line(data_siste_normal, {
+            x:           "periode",
+            y:           "antall",
+            stroke:      "#1a6b4a",
+            strokeWidth: 2,
+            curve:       "monotone-x"
+          }),
+          Plot.tip(data, Plot.pointerX({
+            x:     "periode",
+            y:     "antall",
+            title: d =>
+              `${hg}\n${fmt_mnd(d.periode)}\n${fmt_int(d.antall)} deltakere` +
+              (d.brudd ? "\n(registeromlegging — ikke sammenlignbart)" : "")
+          }))
+        ].filter(m => m !== null)
+      })}
+    </div>`;
+  })}
+</div>
+`
+```
+
+## Tiltakstyper
+
+```{ojs}
+//| label: tt-velgere
+//| echo: false
+viewof tt_maalgruppe = Inputs.radio(
+  ["Arbeidssøkere", "Nedsatt arbeidsevne"],
+  { label: "Målgruppe:", value: "Nedsatt arbeidsevne" }
+)
+```
+
+```{ojs}
+//| label: tt-data
+//| echo: false
+// Lazy-load: fil hentes på nytt når målgruppe-valg endres
+tiltakstyper = {
+  const fil = tt_maalgruppe === "Arbeidssøkere"
+    ? FileAttachment("data/web/tiltakstyper_arbeidssokere.json")
+    : FileAttachment("data/web/tiltakstyper_nedsatt.json");
+  const rows = await fil.json();
+  return rows.map(d => ({...d, periode: new Date(d.periode)}));
+}
+
+// Hovedgrupper sortert etter siste verdi (størst først) — som default-valg
+tt_hovedgrupper_sortert = {
+  const siste = unike_perioder[unike_perioder.length - 1];
+  const sum = d3.rollup(
+    tiltakstyper.filter(d => d.periode.getTime() === siste.getTime()),
+    v => d3.sum(v, r => r.antall),
+    d => d.hovedgruppe
+  );
+  return [...sum.entries()]
+    .sort((a, b) => d3.descending(a[1], b[1]))
+    .map(([hg]) => hg);
+}
+```
+
+```{ojs}
+//| label: tt-hg-velger
+//| echo: false
+viewof tt_hovedgruppe = Inputs.select(
+  tt_hovedgrupper_sortert,
+  { label: "Hovedgruppe:", value: tt_hovedgrupper_sortert[0] }
+)
+viewof tt_vis_utfasede = Inputs.toggle({
+  label: "Vis utfasede tiltak",
+  value: false
+})
+```
+
+```{ojs}
+//| label: tt-undertype-utvalg
+//| echo: false
+tt_filtrert = tiltakstyper.filter(d => d.hovedgruppe === tt_hovedgruppe)
+
+// Undertyper deles i aktive og utfasede. En undertype regnes som utfaset
+// dersom siste-12-mnd-snitt er under 5 % av all-time max — fanger både
+// helt avsluttede tiltak (Resultatbasert finansiering 2022) og tiltak som
+// fortsatt har sporadisk aktivitet, men er reelt utfaset (Utdanning gikk
+// fra 7000 til 6 under Opplæring/Nedsatt).
+tt_undertype_status = {
+  const alle_ut = [...new Set(tt_filtrert.map(d => d.undertype))];
+  const cutoff  = unike_perioder[unike_perioder.length - 12];
+  const status  = new Map();
+  for (const ut of alle_ut) {
+    const rader     = tt_filtrert.filter(d => d.undertype === ut);
+    const med_verdi = rader.filter(d => d.antall != null);
+    const max_hist  = d3.max(med_verdi, d => d.antall) ?? 0;
+    const siste_12  = med_verdi.filter(d => d.periode.getTime() >= cutoff.getTime());
+    const snitt_12  = siste_12.length > 0 ? d3.mean(siste_12, d => d.antall) : 0;
+    const siste_rad = med_verdi[med_verdi.length - 1];
+    const er_utfaset = max_hist > 0 && (snitt_12 / max_hist < 0.05);
+    status.set(ut, {
+      er_utfaset,
+      max_hist,
+      siste_verdi: siste_rad?.antall ?? 0,
+      siste_periode: siste_rad?.periode ?? null
+    });
+  }
+  return status;
+}
+
+// Aktive først (sortert etter siste verdi), utfasede sist (sortert etter
+// historisk max). Filtrert basert på vis-utfasede-toggle.
+tt_undertyper_sortert = {
+  const alle_ut = [...tt_undertype_status.keys()];
+  const aktive   = alle_ut.filter(ut => !tt_undertype_status.get(ut).er_utfaset)
+    .sort((a, b) => d3.descending(
+      tt_undertype_status.get(a).siste_verdi,
+      tt_undertype_status.get(b).siste_verdi
+    ));
+  const utfasede = alle_ut.filter(ut => tt_undertype_status.get(ut).er_utfaset)
+    .sort((a, b) => d3.descending(
+      tt_undertype_status.get(a).max_hist,
+      tt_undertype_status.get(b).max_hist
+    ));
+  return tt_vis_utfasede ? [...aktive, ...utfasede] : aktive;
+}
+
+tt_antall_utfasede = [...tt_undertype_status.values()]
+  .filter(s => s.er_utfaset).length
+
+tt_siste_12 = {
+  const cutoff = unike_perioder[unike_perioder.length - 12];
+  return tt_filtrert.filter(d => d.periode.getTime() >= cutoff.getTime());
+}
+
+// Brudd-håndtering for arbeidssøker-undertyper (apr–jul 2025).
+// Bridge-punkt på hver side så stiplet del kobler til heldekkende segmenter.
+tt_brudd_rader = tt_filtrert.filter(d => d.brudd)
+tt_har_brudd = tt_brudd_rader.length > 0
+
+tt_brudd_min = tt_har_brudd
+  ? d3.min(tt_brudd_rader, d => d.periode)
+  : null
+tt_brudd_max = tt_har_brudd
+  ? d3.max(tt_brudd_rader, d => d.periode)
+  : null
+tt_bridge_start = tt_har_brudd
+  ? unike_perioder[unike_perioder.findIndex(p => p.getTime() === tt_brudd_min.getTime()) - 1]
+  : null
+tt_bridge_slutt = tt_har_brudd
+  ? unike_perioder[unike_perioder.findIndex(p => p.getTime() === tt_brudd_max.getTime()) + 1]
+  : null
+```
+
+```{ojs}
+//| label: tt-csv-eksport
+//| echo: false
+// CSV-eksport av valgt utvalg (én hovedgruppe × alle undertyper × hele perioden)
+tt_csv_blob = {
+  const header = "maalgruppe,hovedgruppe,undertype,periode,antall,brudd\n";
+  const linjer = tt_filtrert.map(d =>
+    [
+      `"${d.maalgruppe}"`,
+      `"${d.hovedgruppe}"`,
+      `"${d.undertype}"`,
+      d.periode.toISOString().slice(0, 10),
+      d.antall ?? "",
+      d.brudd
+    ].join(",")
+  );
+  return new Blob([header + linjer.join("\n") + "\n"], { type: "text/csv" });
+}
+
+tt_csv_url = URL.createObjectURL(tt_csv_blob)
+tt_csv_filnavn = `arbeidsmarkedstiltak_${tt_maalgruppe.toLowerCase().replace(/\s+/g, "_").replace(/ø/g, "o").replace(/å/g, "a").replace(/æ/g, "ae")}_${tt_hovedgruppe.toLowerCase().replace(/\s+/g, "_").replace(/ø/g, "o").replace(/å/g, "a").replace(/æ/g, "ae")}.csv`
+```
+
+```{ojs}
+//| label: tt-kpi
+//| echo: false
+{
+  // Sum av valgt målgruppe × valgt hovedgruppe på siste / forrige / for_aar
+  const sum_periode = periode => d3.sum(
+    tt_filtrert.filter(d => d.periode.getTime() === periode.getTime()),
+    d => d.antall ?? 0
+  );
+  const total_naa     = sum_periode(siste_periode);
+  const total_for_aar = sum_periode(for_aar_periode);
+  const total_forrige = sum_periode(forrige_periode);
+  const delta_aar = total_for_aar > 0
+    ? (total_naa - total_for_aar) / total_for_aar * 100 : 0;
+  const delta_mnd = total_forrige > 0
+    ? (total_naa - total_forrige) / total_forrige * 100 : 0;
+  return html`
+    <div class="kpi-overskrift">Per ${fmt_mnd(siste_periode)} — ${tt_maalgruppe.toLowerCase()} / ${tt_hovedgruppe.toLowerCase()}</div>
+    <div class="kpi-grid">
+      <div class="kpi-box">
+        <div class="kpi-label">Totalt i hovedgruppen</div>
+        <div class="kpi-value">${fmt_int(total_naa)}</div>
+        <div class="kpi-delta">deltakere</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Siste 12 mnd</div>
+        <div class="kpi-value">${fmt_pct(delta_aar)} %</div>
+        <div class="kpi-delta ${delta_aar >= 0 ? "opp" : "ned"}">
+          ${fmt_int(total_naa - total_for_aar)} deltakere
+        </div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Siste måned</div>
+        <div class="kpi-value">${fmt_pct(delta_mnd)} %</div>
+        <div class="kpi-delta ${delta_mnd >= 0 ? "opp" : "ned"}">
+          ${fmt_int(total_naa - total_forrige)} deltakere
+        </div>
+      </div>
+    </div>
+  `;
+}
+```
+
+```{ojs}
+//| label: tt-meta
+//| echo: false
+htl.html`
+<div class="tt-meta">
+  ${tt_undertyper_sortert.length} undertyper vises i hovedgruppen
+  «${tt_hovedgruppe}» — målgruppe: ${tt_maalgruppe.toLowerCase()}.
+  ${tt_antall_utfasede > 0 && !tt_vis_utfasede
+    ? html` <span style="color:#9ca3a3;">(${tt_antall_utfasede} utfaset${tt_antall_utfasede > 1 ? "" : ""} skjult — toggle for å vise)</span>`
+    : ""}
+  <span class="tt-csv">
+    <a href="${tt_csv_url}" download="${tt_csv_filnavn}">Last ned CSV ↓</a>
+  </span>
+</div>
+`
+```
+
+```{ojs}
+//| label: tt-grid
+//| echo: false
+htl.html`
+<div class="hg-grid">
+  ${tt_undertyper_sortert.map(ut => {
+    const data        = tt_filtrert.filter(d => d.undertype === ut);
+    const data_siste  = tt_siste_12.filter(d => d.undertype === ut);
+    const status_ut   = tt_undertype_status.get(ut);
+    // Bruker samme utfaset-definisjon som filteringen — så panel-tittelens
+    // grå/grønn matcher hvilke paneler som er skjult/synlig.
+    const siste_verdi = status_ut.siste_verdi;
+    const er_aktiv    = !status_ut.er_utfaset;
+
+    // Brudd-segment for denne undertypen (kun arbeidssøkere)
+    const data_brudd = tt_har_brudd
+      ? data.filter(d =>
+          d.periode.getTime() >= tt_bridge_start.getTime() &&
+          d.periode.getTime() <= tt_bridge_slutt.getTime()
+        )
+      : [];
+    const data_normal = tt_har_brudd
+      ? data.filter(d => !d.brudd)
+      : data;
+    const data_siste_normal = tt_har_brudd
+      ? data_siste.filter(d => !d.brudd)
+      : data_siste;
+
+    return htl.html`<div class="hg-panel">
+      <div class="hg-tittel">
+        <span>${ut}</span>
+        <span class="${er_aktiv ? "hg-verdi" : "hg-verdi utfaset"}">${fmt_int(siste_verdi)}</span>
+      </div>
+      ${Plot.plot({
+        height:       110,
+        marginLeft:   45,
+        marginRight:  12,
+        marginTop:    8,
+        marginBottom: 22,
+        x: {
+          label:  null,
+          type:   "time",
+          domain: [unike_perioder[0], unike_perioder[unike_perioder.length - 1]],
+          ticks:  4
+        },
+        y: {
+          label:      null,
+          grid:       true,
+          nice:       true,
+          tickFormat: d => d3.format(",.0f")(d).replace(/,/g, " ")
+        },
+        marks: [
+          Plot.ruleY([0], { stroke: "#9ca3a3" }),
+          Plot.line(data_normal, {
+            x:           "periode",
+            y:           "antall",
+            stroke:      "#9ca3a3",
+            strokeWidth: 1.5,
+            curve:       "monotone-x"
+          }),
+          data_brudd.length > 0 ? Plot.line(data_brudd, {
+            x:                "periode",
+            y:                "antall",
+            stroke:           "#9ca3a3",
+            strokeWidth:      1.5,
+            strokeDasharray:  "3,3"
+          }) : null,
+          Plot.line(data_siste_normal, {
+            x:           "periode",
+            y:           "antall",
+            stroke:      "#1a6b4a",
+            strokeWidth: 2,
+            curve:       "monotone-x"
+          }),
+          Plot.tip(data, Plot.pointerX({
+            x:     "periode",
+            y:     "antall",
+            title: d =>
+              `${ut}\n${fmt_mnd(d.periode)}\n${fmt_int(d.antall)} deltakere` +
+              (d.brudd ? "\n(registeromlegging — ikke sammenlignbart)" : "")
+          }))
+        ].filter(m => m !== null)
+      })}
+    </div>`;
+  })}
+</div>
+`
+```
+
+:::
+
+```{ojs}
+//| label: kildefooter
+//| echo: false
+html`
+<div class="kildefooter">
+  <strong>Kilde:</strong> NAV TILT-statistikk, månedlige tidsserier
+  (<a href="https://www.nav.no/arbeid/statistikk/arbeidsmarkedstiltak" target="_blank">nav.no</a>).
+  Data dekker ${fmt_mnd(d3.min(oversikt, d => d.periode))}–${fmt_mnd(siste_periode)}.
+  ${metadata.n_hovedgrupper} hovedgrupper og ${metadata.n_tiltakstyper} tiltakstyper.
+  <br>
+  <strong>Merknad:</strong> April–juli 2025 vises som stiplet for arbeidssøkere
+  fordi NAV la om arbeidssøkerregisteret i denne perioden; tallene er ikke
+  direkte sammenlignbare med tidligere måneder.
+</div>
+`
+```
