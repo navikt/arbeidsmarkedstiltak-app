@@ -850,7 +850,7 @@ htl.html`
 html`
 <div class="kildefooter">
   <strong>Kilde:</strong> NAV TILT-statistikk, månedlige tidsserier
-  (<a href="https://www.nav.no/arbeid/statistikk/arbeidsmarkedstiltak" target="_blank">nav.no</a>).
+  (<a href="https://www.nav.no/no/nav-og-samfunn/statistikk/arbeidssokere-og-stillinger-statistikk/tiltaksdeltakere" target="_blank">nav.no</a>).
   Data dekker ${fmt_mnd(d3.min(oversikt, d => d.periode))}–${fmt_mnd(siste_periode)}.
   ${metadata.n_hovedgrupper} hovedgrupper og ${metadata.n_tiltakstyper} tiltakstyper.
   <br>
