@@ -62,21 +62,19 @@ jobs:
             git push
           fi
 
-      # ----------------------------------------------------------------------
-      # TODO — publisering etter NAVs datafortelling-oppskrift.
-      # Når oppskriften er på plass, legg til et steg som bygger og publiserer,
-      # f.eks:
-      #
-      #   - name: Sett opp Quarto
-      #     uses: quarto-dev/quarto-actions/setup@v2
-      #
-      #   - name: Render og publiser
-      #     env:
-      #       NADA_TOKEN: ${{ secrets.NADA_TOKEN }}   # legg token i repo-secrets
-      #     run: |
-      #       quarto render arbeidsmarkedstiltak.qmd
-      #       # ... publiseringskall iht. NAVs interne oppskrift
-      #
-      # Husk å legge nødvendige secrets under
-      # Settings -> Secrets and variables -> Actions i navikt-repoet.
-      # ----------------------------------------------------------------------
+      - name: Sett opp Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render datafortelling
+        run: |
+          quarto render arbeidsmarkedstiltak.qmd --output-dir _site
+          mv _site/arbeidsmarkedstiltak.html _site/index.html
+
+      - name: Last opp til datamarkedsplassen (intern, prod)
+        uses: navikt/story-upload@v1
+        with:
+          id: dd400ca2-e4d8-43cb-8d10-bb2352375a59
+          dir: _site
+          team_token: ${{ secrets.TEAM_TOKEN }}
+          env: prod
+          public: "false"

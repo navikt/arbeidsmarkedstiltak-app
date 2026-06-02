@@ -1,0 +1,34 @@
+name: Publiser datafortelling
+
+# Kjører ved push til main (f.eks. etter kodeendringer) og kan startes manuelt.
+# Den månedlige oppdateringsworkflowen publiserer også etter ny data er hentet.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publiser:
+    name: Render og publiser til datamarkedsplassen
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sett opp Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render datafortelling
+        run: |
+          quarto render arbeidsmarkedstiltak.qmd --output-dir _site
+          mv _site/arbeidsmarkedstiltak.html _site/index.html
+
+      - name: Last opp til datamarkedsplassen (intern, prod)
+        uses: navikt/story-upload@v1
+        with:
+          id: dd400ca2-e4d8-43cb-8d10-bb2352375a59
+          dir: _site
+          team_token: ${{ secrets.TEAM_TOKEN }}
+          env: prod
+          public: "false"
