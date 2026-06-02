@@ -6,7 +6,7 @@ Bygget som statisk **Quarto + OJS + Observable Plot**: all R-logikk kjøres loka
 
 Datakilde: NAV TILT-statistikk (åpne data fra nav.no). Oppdateres månedlig.
 
-> Dette er en selvstendig kopi klargjort for publisering som datafortelling via jobb-konto (github.com/navikt). Den har ingen kobling til den private hjemmesiden eller dens kopi.
+**Publisert:** https://data.ansatt.nav.no/story/dd400ca2-e4d8-43cb-8d10-bb2352375a59
 
 ## Struktur
 
@@ -25,15 +25,15 @@ arbeidsmarkedstiltak-app/
 └── output/     # Eventuelle eksporterte tabeller/figurer
 ```
 
-## Publisering (datafortelling)
+## Publisering
 
-Følg NAVs interne oppskrift for å publisere en datafortelling. Stegene som er
-spesifikke for det oppsettet (token, _quarto.yml-publiseringsblokk, nada-/CLI-kall)
-legges til når oppskriften følges — se TODO-markører nedenfor.
+Fortellingen publiseres automatisk til **NAVs interne datamarkedsplass** via GitHub Actions:
 
-1. Opprett repo under github.com/navikt og push denne mappa.
-2. Render lokalt for å verifisere: `quarto render arbeidsmarkedstiltak.qmd`
-3. Publiser etter datafortelling-oppskriften.
+- **Ved push til `main`** → `.github/workflows/publiser-datafortelling.yml` renderer og laster opp
+- **Månedlig (dag 20)** → `.github/workflows/maanedlig-oppdatering.yml` henter ny TILT-data, committer og publiserer
+
+Story ID: `dd400ca2-e4d8-43cb-8d10-bb2352375a59`  
+Secret i repo: `TEAM_TOKEN` (hentes fra [datamarkedsplassen](https://data.ansatt.nav.no/user/tokens))
 
 ## Oppdateringsrutine (månedlig)
 
@@ -48,15 +48,7 @@ Når NAV publiserer ny TILT-fil:
 `update.sh` automatiserer steg 1–4 (idempotent — trygt å kjøre flere ganger).
 
 **Automatisk:** `.github/workflows/maanedlig-oppdatering.yml` kjører steg 1–4 via
-GitHub Actions én gang i måneden (cron, dag 20) og committer ny data automatisk.
-Publiseringssteget kobles på etter NAVs datafortelling-oppskrift — se workflow-fila
-og `instruksjon.md`.
-
-## TODO før første publisering
-
-- [ ] Bekreft at datafortelling-oppskriften godtar separate `data/web/*.json` (ev. sett `embed-resources: true` i qmd-frontmatter for å inline alt i én HTML).
-- [ ] Legg til ev. `_quarto.yml` / publiseringskonfig som oppskriften krever.
-- [ ] Vurder NAV-profilering (farger/typografi) — dagens tema arvet grønntonen (#1a6b4a) fra den private siden; bytt om ønskelig.
+GitHub Actions én gang i måneden (cron, dag 20), committer ny data og publiserer til datamarkedsplassen.
 
 ## Lisens
 
