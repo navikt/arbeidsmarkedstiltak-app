@@ -225,6 +225,11 @@ html`
     <div class="kpi-delta ${delta_aar_pct >= 0 ? "opp" : "ned"}">
       ${fmt_pct(delta_aar_pct)} % siste 12 mnd
     </div>
+    ${siste_per_maalgruppe.get("Andre på tiltak") == null
+      ? html`<div class="kpi-delta" style="margin-top:0.4rem;font-style:italic">
+          Inkluderer ikke «Andre på tiltak» ennå
+        </div>`
+      : ""}
   </div>
 
   <div class="kpi-box">
