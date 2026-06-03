@@ -26,7 +26,29 @@
 
 ---
 
-## 2026-06-02 — Økt 2: Fiks av lenke til NAV-statistikk
+## 2026-06-03 — Økt 3: Legg til «Andre på tiltak» som valgbar målgruppe
+
+**Mål:** Inkludere den tredje NAV-målgruppen «Andre på tiltak» i hele appen.
+
+**Bakgrunn:** Gruppen fantes i rådata men ble eksplisitt filtrert ut i R-pipeline.
+Første-tab viste derfor bare Arbeidssøkere + Nedsatt arbeidsevne uten å opplyse om det.
+
+**Gjort:**
+- `02_aggreger.R`: Fjernet filter som droppet «Andre»; omdøper `"Andre"` → `"Andre på tiltak"` for klarere visning
+- `03_eksporter_json.R`: Lagt til `"Andre på tiltak" = "andre"` → eksporterer `tiltakstyper_andre.json`
+- `data/web/tiltakstyper_andre.json`: Stub (`[]`) slik at render ikke feiler før pipeline kjøres med rådata
+- `arbeidsmarkedstiltak.qmd`:
+  - Tab 1: fjerde KPI-boks for «Andre» — vises kondisjonelt når data finnes; oransje `#c05621` i linjegraf
+  - Tab 2/3: radio-knapp inkluderer «Andre på tiltak»
+  - Tab 3: filinnlasting for `tiltakstyper_andre.json` + tom-tilstand-melding ved tom stub
+  - Null-guard i Tab 2 KPI-cellen (NaN-krasj når data ikke finnes i oversikt.json ennå)
+  - CSS: `kpi-grid` bruker `auto-fit` for å romme 3 eller 4 bokser uten layout-brudd
+
+**Status:**
+- Kode committed og pushet til `main` — publisering kjøres via Actions
+- «Andre på tiltak» vises i UI, men KPI/grafer er tomme inntil rådata lastes ned og pipeline kjøres
+- Neste steg: kjør `update.sh --force` (evt. steg 00–03 manuelt) for å populere `tiltakstyper_andre.json` og «Andre»-rader i øvrige JSON-filer
+
 
 **Mål:** Oppdatere ødelagt kildelenke i bunnteksten.
 
