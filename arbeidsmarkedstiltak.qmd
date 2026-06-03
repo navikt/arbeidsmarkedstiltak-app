@@ -21,7 +21,7 @@ format:
           }
           .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1.25rem;
             margin: 0 0 2rem;
             max-width: 1032px;
@@ -244,6 +244,20 @@ html`
       siste 12 mnd
     </div>
   </div>
+
+  ${(() => {
+    const andre_naa     = siste_per_maalgruppe.get("Andre på tiltak") ?? null;
+    const andre_for_aar = for_aar_per_maalgruppe.get("Andre på tiltak") ?? null;
+    if (andre_naa == null) return "";
+    const pct = (andre_naa / andre_for_aar - 1) * 100;
+    return html`<div class="kpi-box">
+      <div class="kpi-label">Andre på tiltak</div>
+      <div class="kpi-value">${fmt_n(andre_naa).replace(/,/g, " ")}</div>
+      <div class="kpi-delta ${andre_naa >= andre_for_aar ? "opp" : "ned"}">
+        ${fmt_pct(pct)} % siste 12 mnd
+      </div>
+    </div>`;
+  })()}
 </div>
 `
 ```
@@ -290,8 +304,8 @@ bridge_slutt = unike_perioder[unike_perioder.findIndex(p => p.getTime() === brud
     .map(([m, rows]) => rows[rows.length - 1]);
 
   const farger = {
-    domain: ["Arbeidssøkere", "Nedsatt arbeidsevne"],
-    range:  ["#2c3e50", "#1a6b4a"]
+    domain: ["Arbeidssøkere", "Nedsatt arbeidsevne", "Andre på tiltak"],
+    range:  ["#2c3e50", "#1a6b4a", "#c05621"]
   };
   const y_full = {
     label:      "Antall deltakere",
@@ -390,7 +404,7 @@ bridge_slutt = unike_perioder[unike_perioder.findIndex(p => p.getTime() === brud
 //| label: hg-velger
 //| echo: false
 viewof hg_maalgruppe = Inputs.radio(
-  ["Arbeidssøkere", "Nedsatt arbeidsevne"],
+  ["Arbeidssøkere", "Nedsatt arbeidsevne", "Andre på tiltak"],
   { label: "Målgruppe:", value: "Nedsatt arbeidsevne" }
 )
 ```
@@ -402,6 +416,16 @@ viewof hg_maalgruppe = Inputs.radio(
   const total_naa     = siste_per_maalgruppe.get(hg_maalgruppe);
   const total_for_aar = for_aar_per_maalgruppe.get(hg_maalgruppe);
   const total_forrige = forrige_per_maalgruppe.get(hg_maalgruppe);
+
+  if (total_naa == null) return html`
+    <div class="kpi-overskrift">Per ${fmt_mnd(siste_periode)} — ${hg_maalgruppe.toLowerCase()}</div>
+    <div class="kpi-grid" style="margin-bottom:2rem">
+      <div class="kpi-box"><div class="kpi-label">Ingen data tilgjengelig</div>
+        <div class="kpi-delta">Kjør R-pipeline for å laste inn data for denne målgruppen.</div>
+      </div>
+    </div>
+  `;
+
   const delta_aar = (total_naa - total_for_aar) / total_for_aar * 100;
   const delta_mnd = (total_naa - total_forrige) / total_forrige * 100;
   return html`
@@ -550,7 +574,7 @@ htl.html`
 //| label: tt-velgere
 //| echo: false
 viewof tt_maalgruppe = Inputs.radio(
-  ["Arbeidssøkere", "Nedsatt arbeidsevne"],
+  ["Arbeidssøkere", "Nedsatt arbeidsevne", "Andre på tiltak"],
   { label: "Målgruppe:", value: "Nedsatt arbeidsevne" }
 )
 ```
@@ -562,7 +586,9 @@ viewof tt_maalgruppe = Inputs.radio(
 tiltakstyper = {
   const fil = tt_maalgruppe === "Arbeidssøkere"
     ? FileAttachment("data/web/tiltakstyper_arbeidssokere.json")
-    : FileAttachment("data/web/tiltakstyper_nedsatt.json");
+    : tt_maalgruppe === "Nedsatt arbeidsevne"
+    ? FileAttachment("data/web/tiltakstyper_nedsatt.json")
+    : FileAttachment("data/web/tiltakstyper_andre.json");
   const rows = await fil.json();
   return rows.map(d => ({...d, periode: new Date(d.periode)}));
 }
@@ -585,8 +611,8 @@ tt_hovedgrupper_sortert = {
 //| label: tt-hg-velger
 //| echo: false
 viewof tt_hovedgruppe = Inputs.select(
-  tt_hovedgrupper_sortert,
-  { label: "Hovedgruppe:", value: tt_hovedgrupper_sortert[0] }
+  tt_hovedgrupper_sortert.length > 0 ? tt_hovedgrupper_sortert : ["—"],
+  { label: "Hovedgruppe:", value: tt_hovedgrupper_sortert[0] ?? "—" }
 )
 viewof tt_vis_utfasede = Inputs.toggle({
   label: "Vis utfasede tiltak",
@@ -697,6 +723,13 @@ tt_csv_filnavn = `arbeidsmarkedstiltak_${tt_maalgruppe.toLowerCase().replace(/\s
 //| label: tt-kpi
 //| echo: false
 {
+  if (tiltakstyper.length === 0) return html`
+    <div class="tt-meta" style="color:#8b2a2a;margin-bottom:1rem">
+      Ingen tiltakstype-data tilgjengelig for <strong>${tt_maalgruppe}</strong> ennå.
+      Data vises etter neste pipeline-kjøring.
+    </div>
+  `;
+
   // Sum av valgt målgruppe × valgt hovedgruppe på siste / forrige / for_aar
   const sum_periode = periode => d3.sum(
     tt_filtrert.filter(d => d.periode.getTime() === periode.getTime()),
@@ -739,7 +772,9 @@ tt_csv_filnavn = `arbeidsmarkedstiltak_${tt_maalgruppe.toLowerCase().replace(/\s
 ```{ojs}
 //| label: tt-meta
 //| echo: false
-htl.html`
+{
+  if (tiltakstyper.length === 0) return htl.html``;
+  return htl.html`
 <div class="tt-meta">
   ${tt_undertyper_sortert.length} undertyper vises i hovedgruppen
   «${tt_hovedgruppe}» — målgruppe: ${tt_maalgruppe.toLowerCase()}.
@@ -750,13 +785,16 @@ htl.html`
     <a href="${tt_csv_url}" download="${tt_csv_filnavn}">Last ned CSV ↓</a>
   </span>
 </div>
-`
+`;
+}
 ```
 
 ```{ojs}
 //| label: tt-grid
 //| echo: false
-htl.html`
+{
+  if (tt_undertyper_sortert.length === 0) return htl.html``;
+  return htl.html`
 <div class="hg-grid">
   ${tt_undertyper_sortert.map(ut => {
     const data        = tt_filtrert.filter(d => d.undertype === ut);
@@ -839,7 +877,8 @@ htl.html`
     </div>`;
   })}
 </div>
-`
+`;
+}
 ```
 
 :::

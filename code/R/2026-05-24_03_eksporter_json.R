@@ -61,7 +61,8 @@ fn_skriv_json(hovedgruppe, path(dir_web, "hovedgrupper.json"))
 # Filnavn: tiltakstyper_arbeidssokere.json, tiltakstyper_nedsatt.json.
 maalgruppe_til_slug <- c(
     "Arbeidssøkere"       = "arbeidssokere",
-    "Nedsatt arbeidsevne" = "nedsatt"
+    "Nedsatt arbeidsevne" = "nedsatt",
+    "Andre på tiltak"     = "andre"
 )
 
 for (mg in names(maalgruppe_til_slug)) {

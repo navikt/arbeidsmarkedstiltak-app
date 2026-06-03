@@ -8,8 +8,9 @@
 # Ut:   data/clean/parsed/{oversikt,hovedgruppe,tiltakstype}_aggregert.{rds,csv}
 #
 # Beslutninger (jf. designplanen):
-#   - Kun målgruppene Arbeidssøkere + Nedsatt arbeidsevne (drop "Andre"; ikke
-#     appens skop, jf. CLAUDE.md "Datadekning")
+#   - Alle tre målgruppene Arbeidssøkere, Nedsatt arbeidsevne og Andre på tiltak
+#     inkluderes. "Andre" fra rådata omdøpes til "Andre på tiltak" for klarere
+#     visning i frontend.
 #   - Q4: absolutte tall, ingen indeksering. Avledede felter beregnes i OJS
 #     hvis nødvendig
 #   - Q3: ingen markering av format-bruddet 2023 (TILT030 → TILT100 er
@@ -29,10 +30,19 @@ undertype_long   <- read_rds(path(dir_parsed, "undertype_tidsserie.rds"))
 
 # 1. Filtrer til appens målgrupper ---------------------------------------
 
-maalgrupper_app <- c("Arbeidssøkere", "Nedsatt arbeidsevne")
+maalgrupper_app <- c("Arbeidssøkere", "Nedsatt arbeidsevne", "Andre")
 
-hovedgruppe_long <- hovedgruppe_long |> filter(maalgruppe %in% maalgrupper_app)
-undertype_long   <- undertype_long   |> filter(maalgruppe %in% maalgrupper_app)
+# "Andre" fra rådata omdøpes til "Andre på tiltak" for klarere visning i frontend
+fn_recode_maalgruppe <- function(df) {
+    df |> mutate(maalgruppe = dplyr::recode(maalgruppe, "Andre" = "Andre på tiltak"))
+}
+
+hovedgruppe_long <- hovedgruppe_long |>
+    filter(maalgruppe %in% maalgrupper_app) |>
+    fn_recode_maalgruppe()
+undertype_long <- undertype_long |>
+    filter(maalgruppe %in% maalgrupper_app) |>
+    fn_recode_maalgruppe()
 
 # 2. Statistikkbrudd-flagg ------------------------------------------------
 # NAV la om arbeidssøkerregisteret våren 2025; mars-tall til september-tall
