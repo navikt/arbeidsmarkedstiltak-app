@@ -1,8 +1,8 @@
 {
   "sist_oppdatert": "2026-04-01",
-  "tidligste": "2019-01-01",
-  "maalgrupper": ["Arbeidssøkere", "Nedsatt arbeidsevne"],
-  "n_hovedgrupper": 15,
-  "n_tiltakstyper": 80,
-  "generert": "2026-05-26T13:33:30+0200"
+  "tidligste": "2023-01-01",
+  "maalgrupper": ["Andre på tiltak", "Arbeidssøkere", "Nedsatt arbeidsevne"],
+  "n_hovedgrupper": 23,
+  "n_tiltakstyper": 87,
+  "generert": "2026-06-03T14:05:56+0200"
 }

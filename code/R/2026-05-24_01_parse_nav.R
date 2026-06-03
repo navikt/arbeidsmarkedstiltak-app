@@ -300,6 +300,15 @@ cat("\n  Rader (rå, alder-detaljert): ", nrow(tilt030_raw), "\n", sep = "")
 # mens andre har tall, blir totalen for-lav. Vi markerer "prikket = TRUE"
 # hvis minst én alder-blokk var prikket — så pipelinen senere kan vurdere
 # å skjule/dempe slike celler.
+if (nrow(tilt030_raw) == 0) {
+    tom <- tibble(
+        maalgruppe = character(), hovedgruppe = character(), undertype = character(),
+        periode = as.Date(character()), antall = integer(), prikket = logical(), filkilde = character()
+    )
+    tilt030_undertype   <- tom
+    tilt030_hoofdgruppe <- tom
+} else {
+
 tilt030_undertype <- tilt030_raw |>
     filter(!is.na(undertype),
            !str_starts(undertype, "I alt")) |>
@@ -322,7 +331,7 @@ tilt030_undertype <- tilt030_raw |>
     # antall = 0 fra sum(.., na.rm=TRUE) — sett til NA istedet.
     mutate(antall = if_else(antall == 0 & prikket, NA_integer_, antall))
 
-tilt030_hovedgruppe <- tilt030_undertype |>
+tilt030_hoofdgruppe <- tilt030_undertype |>
     group_by(maalgruppe, hovedgruppe, periode, filkilde) |>
     summarise(
         antall = sum(antall, na.rm = TRUE),
@@ -348,6 +357,8 @@ undertype_long   <- bind_rows(undertype_long,
 cat("\n  Samlet periode etter merge: ",
     as.character(min(hovedgruppe_long$periode)), " – ",
     as.character(max(hovedgruppe_long$periode)), "\n", sep = "")
+
+} # end else (tilt030 finnes)
 
 # 6. Dedupliser — flere filer kan dekke samme periode --------------------
 # Eks: 202312_TILT100 og 202412_TILT100 dekker ulike år; men hvis to filer
