@@ -1,6 +1,6 @@
 # arbeidsmarkedstiltak-app
 
-Datafortelling som viser statistikk over deltakere på NAVs arbeidsmarkedstiltak — månedlige tidsserier per hovedgruppe og tiltakstype, for begge målgrupper (nedsatt arbeidsevne og ordinære arbeidssøkere).
+Datafortelling som viser statistikk over deltakere på NAVs arbeidsmarkedstiltak — månedlige tidsserier per hovedgruppe og tiltakstype, for tre målgrupper: nedsatt arbeidsevne, ordinære arbeidssøkere og andre på tiltak.
 
 Bygget som statisk **Quarto + OJS + Observable Plot**: all R-logikk kjøres lokalt og skriver ferdig JSON til `data/web/`, som datafortellingen leser i klienten. Ingen serverkjøring kreves.
 

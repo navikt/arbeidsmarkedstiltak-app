@@ -58,3 +58,25 @@ Første-tab viste derfor bare Arbeidssøkere + Nedsatt arbeidsevne uten å opply
 - Rendret og verifisert at appen bygger uten feil
 
 **Status:** Lenke i kildefooter fungerer nå korrekt ✅
+
+---
+
+## 2026-06-05 — Økt 4: Kjør pipeline med data for «Andre på tiltak»
+
+**Mål:** Populere «Andre på tiltak»-kategorien med faktiske tall fra nav.no.
+
+**Bakgrunn:** Koden fra Økt 3 var klar, men pipelinen hadde ikke blitt kjørt med rådata —
+`tiltakstyper_andre.json` lå som tom stub `[]` og «Andre»-radene manglet i `oversikt.json`.
+
+**Gjort:**
+- Lastet ned 36 TILT-Excel-filer fra nav.no (TILT100–180, årganger 2023–2026)
+- Fikset parser-krasj i `01_parse_nav.R`: tom TILT030-blokk (gammelt format, pre-2023)
+  krasjmet på manglende kolonne `undertype` — lagt til guard for 0-rad-tilfellet
+- Kjørt full pipeline (steg 00 → 03) — alle JSON-er oppdatert med ekte data:
+  - `oversikt.json`: 3 målgrupper (Arbeidssøkere 13 032, Nedsatt 67 470, Andre 4 622 — apr 2026)
+  - `tiltakstyper_andre.json`: 1 040 rader med tiltakstype-fordeling for Andre-gruppen
+  - `hoofdgrupper.json`, `metadata.json` og øvrige JSON-er oppdatert
+- Quarto rendret uten feil
+- Committed og pushet til `main`
+
+**Status:** Alle tre målgrupper har ekte data i appen ✅
