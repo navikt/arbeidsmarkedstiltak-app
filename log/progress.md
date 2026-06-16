@@ -61,7 +61,34 @@ Første-tab viste derfor bare Arbeidssøkere + Nedsatt arbeidsevne uten å opply
 
 ---
 
-## 2026-06-05 — Økt 4: Kjør pipeline med data for «Andre på tiltak»
+## 2026-06-16 — Økt 5: Oppdater til mai 2026-data + valideringsscript
+
+**Mål:** Laste inn mai 2026-data og etablere programmatisk validering mot nav.no-kilde.
+
+**Gjort:**
+
+- Kjørt `00_last_ned.R`: Lastet ned 9 nye `202605_TILT*`-filer fra nav.no.
+  NAV byttet filnavnformat fra `2026.04_` (med punkt) til `202605_` (uten punkt).
+- Fikset `01_parse_nav.R`: Regex for `mnd`-ekstraksjon fra filnavn støtter nå
+  begge formater (`YYYYMM_` og `YYYY.MM_`). Endring: `(?<=^\\d{4}[._])\\d{2}`
+  → `^\\d{4}\\.?(\\d{2})` med `group = 1`.
+- Kjørt full pipeline (steg 01 → 03). Alle JSON-er oppdatert til mai 2026:
+  - Arbeidssøkere: 12 580 (mai 2026)
+  - Nedsatt arbeidsevne: 67 603 (mai 2026)
+  - Andre på tiltak: 4 885 (mai 2026)
+- Nytt valideringsscript `code/R/2026-06-16_valider_data.R`:
+  - Leser "I alt"-totaler fra TILT100-Excel og sammenligner med `oversikt.json`
+  - Summerer `tiltakstyper_*.json` og sammenligner med `oversikt.json`
+  - Skiller mellom prikkavvik (≤ 10, forventet) og ekte feil (> 10)
+  - Avslutter med tydelig status: ✅ / ❌
+
+**Valideringsresultat:**
+
+- Excel-avvik: 8 (alle ≤ 3, forventet prikking)
+- Intern konsistens-avvik: 63 (alle ≤ 7, forventet prikking)
+- ✅ Ingen ekte feil — klar for publisering
+
+
 
 **Mål:** Populere «Andre på tiltak»-kategorien med faktiske tall fra nav.no.
 

@@ -27,7 +27,7 @@ Alt er satt opp og fungerer:
 - ✅ Repo på `navikt/arbeidsmarkedstiltak-app`, publisert til NAVs datamarkedsplass
 - ✅ Automatisk månedlig oppdatering via GitHub Actions (cron dag 20)
 - ✅ Tre målgrupper med ekte data: Arbeidssøkere, Nedsatt arbeidsevne, Andre på tiltak
-- ✅ Alle JSON-filer populert og sjekket inn
+- ✅ Alle JSON-filer populert og sjekket inn — **siste data: mai 2026**
 
 Nøkkelfiler som skal finnes:
 
@@ -37,6 +37,7 @@ code/R/2026-05-24_00_last_ned.R
 code/R/2026-05-24_01_parse_nav.R
 code/R/2026-05-24_02_aggreger.R
 code/R/2026-05-24_03_eksporter_json.R
+code/R/2026-06-16_valider_data.R      ← valideringsscript (nytt)
 data/web/oversikt.json
 data/web/hoofdgrupper.json
 data/web/tiltakstyper_arbeidssokere.json
@@ -62,11 +63,24 @@ Rscript code/R/2026-05-24_00_last_ned.R   # last ned fra nav.no
 Rscript code/R/2026-05-24_01_parse_nav.R
 Rscript code/R/2026-05-24_02_aggreger.R
 Rscript code/R/2026-05-24_03_eksporter_json.R
+Rscript code/R/2026-06-16_valider_data.R  # valider mot Excel-kilde
 quarto render arbeidsmarkedstiltak.qmd
 # deretter commit data/web/*.json og push
 ```
 
 `update.sh --force` kjører steg 1–4 i én kommando.
+
+### Valideringsscript
+
+`code/R/2026-06-16_valider_data.R` kjøres etter pipeline og gjør:
+
+1. **Excel ↔ JSON**: Leser "I alt"-totaler fra siste TILT100-fil og sammenligner
+   med `oversikt.json`. Avvik ≤ 10 regnes som forventede prikkavvik (NAV prikkmerker
+   celler med `*` som blir NA i summen). Avvik > 10 er ekte datafeil.
+2. **Intern konsistens**: Summer `tiltakstyper_*.json` per målgruppe/periode og
+   sammenligner med `oversikt.json`. Avvik er typisk forventede prikkavvik.
+
+Scriptet avslutter med `✅ Klar for quarto render` hvis ingen ekte feil finnes.
 
 ---
 

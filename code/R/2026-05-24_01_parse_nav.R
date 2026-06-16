@@ -52,9 +52,9 @@ filer <- dir_ls(dir_raw, regexp = "TILT") |>
     mutate(
         filnavn = path_file(sti),
         tilt_kode = str_extract(filnavn, "TILT\\d{3}"),
-        # Trekk ut YYYY og MM fra prefix. Formater: "202312_", "2026.04_"
+        # Trekk ut YYYY og MM fra prefix. Formater: "202312_", "202605_", "2026.04_"
         aar = str_extract(filnavn, "^\\d{4}") |> as.integer(),
-        mnd = str_extract(filnavn, "(?<=^\\d{4}[._])\\d{2}") |> as.integer(),
+        mnd = str_extract(filnavn, "^\\d{4}\\.?(\\d{2})", group = 1) |> as.integer(),
         til_periode = make_date(aar, mnd, 1),
         # Bestem format
         fmt = case_when(
